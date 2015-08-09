@@ -1,24 +1,13 @@
-from flask import Flask, request, redirect, url_for, session
+from flask import Flask, request, redirect, url_for, session, render_template
 app = Flask(__name__)
 
-@app.route('/settings')
-def display():
-    if 'max_temp' in session:
-        return session['max_temp']
-    else:
-        return 'No data'
+@app.route('/edit', methods=['GET', 'POST'])
+def edit_settings():
+    return render_template('edit.html')
 
 @app.route('/', methods=['GET', 'POST'])
-def settings():
-    if request.method == 'POST':
-        session['max_temp'] = request.form['max_temp']
-        return redirect(url_for('settings'))
-    return '''
-        <form action="" method="post">
-            <p><input type=text name=max_temp>
-            <p><input type=submit value=Submit>
-        </form>
-    '''
+def display_settings():
+    return render_template('main.html')
 
 if __name__ == '__main__':
     # set the secret key.  keep this really secret:
