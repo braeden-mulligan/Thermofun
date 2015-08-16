@@ -1,7 +1,13 @@
 <h1>Settings</h1>
 
-{% for key, value in settings.iteritems() %}
-<p>{{key}}: {{value}}</p>
-{% endfor %}
-
-<a href="/edit">Edit Settings</a>
+<form action="{{ url_for('settings') }}" method="post">
+  {% for key, value in settings.iteritems() %}
+  <div>
+    <label for="{{key}}">{{key}} :</label>
+    <input type="text" name="{{key}}" value="{{value}}"/>
+  </div>
+  {% endfor %}
+  <div class="button">
+    <button type="submit">Save Changes</button>
+  </div>
+</form>

@@ -2,15 +2,14 @@ from flask import Flask, request, url_for, render_template
 
 app = Flask(__name__)
 
-@app.route('/edit', methods=['GET'])
-def edit_settings():
-    s=read_settings_file()
-    return render_template('edit.html', settings=s)
-
 @app.route('/', methods=['GET', 'POST'])
-def display_settings():
-    s=read_settings_file()
-    return render_template('main.html', settings=s)
+def settings():
+    settings = read_settings_file()
+    if request.method == 'POST':
+        for key, value in settings.iteritems():
+            settings[key] = request.form[key]
+            write_settings_file(settings)
+    return render_template('main.html', settings=settings)
 
 def read_settings_file():
     settings = {}
