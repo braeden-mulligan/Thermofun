@@ -1,3 +1,23 @@
 <h1>Settings</h1>
 
-<a href="/edit">Edit Settings</a>
+<form action="{{ url_for('settings') }}" method="post">
+  {% for key, value in settings.iteritems() %}
+    <div>
+      <label for="{{key}}">{{key}} :</label>
+      {% if key == 'enabled' %}
+      <input
+        type="checkbox"
+        name="{{key}}"
+        {% if value == '1' %}
+        checked="on"
+        {% endif %}
+        />
+      {% else %}
+      <input type="text" name="{{key}}" value="{{value}}"/>
+      {% endif %}
+    </div>
+  {% endfor %}
+  <div class="button">
+    <button type="submit">Save Changes</button>
+  </div>
+</form>
