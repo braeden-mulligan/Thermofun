@@ -1,14 +1,13 @@
-<h1>Edit Settings</h1>
+<h1>Settings</h1>
 
 <form action="{{ url_for('display_settings') }}" method="post">
+  {% for key, value in settings.iteritems() %}
   <div>
-    <label for="max_temp">Max Temp:</label>
-    <input type="text" name="max_temp"/>
+    <label for="{{key}}">{{key}} :</label>
+    <input type="text" name="{{key}}"/>
+    <span>{{value}}</span>
   </div>
-  <div>
-    <label for="min_temp">Min Temp:</label>
-    <input type="text" name="min_temp"/>
-  </div>
+  {% endfor %}
   <div class="button">
     <button type="submit">Save</button>
   </div>

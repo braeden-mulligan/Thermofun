@@ -1,3 +1,7 @@
 <h1>Settings</h1>
 
+{% for key, value in settings.iteritems() %}
+<p>{{key}}: {{value}}</p>
+{% endfor %}
+
 <a href="/edit">Edit Settings</a>

@@ -4,11 +4,37 @@ app = Flask(__name__)
 
 @app.route('/edit', methods=['GET'])
 def edit_settings():
-    return render_template('edit.html')
+    s=read_settings_file()
+    return render_template('edit.html', settings=s)
 
 @app.route('/', methods=['GET', 'POST'])
 def display_settings():
-    return render_template('main.html')
+    s=read_settings_file()
+    return render_template('main.html', settings=s)
+
+def read_settings_file():
+    settings = {}
+    try:
+        with open('../settings/settings.yml', 'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                key, value = line.split(':')
+                value = value.strip().strip('\n')
+                settings[key] = value
+        return settings
+    except IOError:
+        return None
+
+def write_settings_file(settings):
+    settings_string = ''
+    for key, value in settings.iteritems():
+        settings_string += '{k}: {v}\n'.format(k=key, v=value)
+    try:
+        with open('../settings/settings.yml', 'w') as f:
+            f.write(settings_string)
+        return True
+    except IOError:
+        return False
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
