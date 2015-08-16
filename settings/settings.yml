@@ -1,0 +1,4 @@
+max_temp: 25
+min_temp: 19
+target_temp: 21
+enabled: 1
