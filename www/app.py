@@ -6,9 +6,14 @@ app = Flask(__name__)
 def settings():
     settings = read_settings_file()
     if request.method == 'POST':
-        for key, value in settings.iteritems():
-            settings[key] = request.form[key]
-            write_settings_file(settings)
+        if 'enabled' in settings and 'enabled' not in request.form:
+            settings['enabled'] = '0'
+        for key, value in request.form.iteritems():
+            if key == 'enabled':
+                settings[key] = '1'
+            else:
+                settings[key] = request.form[key]
+        write_settings_file(settings)
     return render_template('main.html', settings=settings)
 
 def read_settings_file():
