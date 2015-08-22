@@ -16,13 +16,20 @@ def settings():
         write_settings_file(settings)
     return render_template('main.html', settings=settings)
 
+@app.route('/status/', methods=['GET'])
+def status():
+    
+
 def read_settings_file():
     settings = {}
     try:
         with open('../settings/settings.yml', 'r') as f:
             lines = f.readlines()
             for line in lines:
-                key, value = line.split(':')
+                try:
+                    key, value = line.split(':')
+                except ValueError:
+                    continue
                 value = value.strip().strip('\n')
                 settings[key] = value
         return settings
