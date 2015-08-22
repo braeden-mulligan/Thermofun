@@ -1,4 +1,4 @@
 enabled: 1
 max_temp: 25
-min_temp: 19
 target_temp: 21
+
