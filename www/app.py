@@ -16,10 +16,6 @@ def settings():
         write_settings_file(settings)
     return render_template('main.html', settings=settings)
 
-@app.route('/status/', methods=['GET'])
-def status():
-    
-
 def read_settings_file():
     settings = {}
     try:
