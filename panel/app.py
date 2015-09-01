@@ -1,20 +1,10 @@
-from flask import Flask, request, url_for, render_template, jsonify, Response
+from flask import Flask, request, render_template, jsonify, Response, make_response
 
 app = Flask(__name__)
 
 @app.route('/', methods=['GET', 'POST'])
 def settings():
-    settings = read_settings_file()
-    if request.method == 'POST':
-        if 'enabled' in settings and 'enabled' not in request.form:
-            settings['enabled'] = '0'
-        for key, value in request.form.iteritems():
-            if key == 'enabled':
-                settings[key] = '1'
-            else:
-                settings[key] = request.form[key]
-        write_settings_file(settings)
-    return render_template('main.html', settings=settings)
+    return make_response(open('templates/index.html').read())
 
 @app.route('/settings/<setting_name>/', methods=['GET'])
 def get_setting(setting_name):
@@ -27,6 +17,7 @@ def get_setting(setting_name):
         response = jsonify(message="Settings not found!")
         response.status_code = 404
     return response
+
 
 @app.route('/settings/<setting_name>/', methods=['POST'])
 def set_setting(setting_name):
