@@ -28,7 +28,6 @@ def get_setting(setting_name):
         response.status_code = 404
     return response
 
-
 @app.route('/settings/<setting_name>/', methods=['POST'])
 def set_setting(setting_name):
     pass

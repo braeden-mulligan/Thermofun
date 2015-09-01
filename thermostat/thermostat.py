@@ -6,8 +6,9 @@ import RPi.GPIO as GPIO
 import requests
 
 
-def getSettings(
+def getSettings():
 	req = requests.get("http://localhost:5000/settings/max_temp/")
+	print(req.json())
 
 
 def switchOn():
@@ -23,6 +24,10 @@ def switchOff():
 	GPIO.output(17, 0)
 
 if __name__ == "__main__":
+
+	getSettings()
+	quit()
+
 	GPIO.setmode(GPIO.BCM)
 	GPIO.setup(27, GPIO.OUT)
 	GPIO.setup(17, GPIO.OUT)
