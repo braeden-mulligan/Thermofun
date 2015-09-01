@@ -1,5 +1,6 @@
-var panel = angular.module('panel', []);
+var panel = angular.module('panel', ['rzModule']);
 
 panel.controller('mainController', function($scope) {
-    $scope.test = 'Everyone come and see how good I look!';
+    $scope.enabled = true;
+    $scope.temperature = '27';
 });

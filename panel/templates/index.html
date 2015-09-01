@@ -1,13 +1,19 @@
 <html ng-app="panel">
 <head>
+  <title>Control Panel</title>
   <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
   <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.0/css/font-awesome.css" />
+  <link rel="stylesheet" href="/static/vendor/rzslider.css" />
   <script src="/static/vendor/angular.js"></script>
   <script src="/static/vendor/angular-route.js"></script>
   <script src="/static/app/panel.js"></script>
+  <script src="/static/vendor/rzslider.min.js"></script>
 </head>
 <body ng-controller="mainController">
-  <h3>Hello World!</h3>
-  <p>{{test}}</p>
+  <h3>Control Panel</h3>
+  <input type="checkbox" ng-model="enabled"/>
+  <div>
+    <rzslider ng-if="enabled" rz-slider-model="temperature" rz-slider-floor="10" rz-slider-ceil="45"></rzslider>
+  </div>
 </body>
 </html>
