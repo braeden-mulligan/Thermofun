@@ -6,18 +6,19 @@ app = Flask(__name__)
 def settings():
     return make_response(open('templates/index.html').read())
 
-@app.route('/settings/<setting_name>/', methods=['GET'])
-def get_setting(setting_name):
-    settings = read_settings_file()
-    if setting_name in settings:
-        response = jsonify(
-            setting_name=setting_name,
-            setting_value=settings[setting_name])
-    else:
-        response = jsonify(message="Settings not found!")
-        response.status_code = 404
-    return response
-
+@app.route('/settings/', methods=['GET'])
+def get_setting():
+	settings = read_settings_file()
+	data = []
+	for item in settings:
+		response = jsonify(
+			setting_name=item,
+			setting_value=item[setting_name])
+		data[item] = response
+	else:
+		response = jsonify(message="Settings not found!")
+		response.status_code = 404
+	return data
 
 @app.route('/settings/<setting_name>/', methods=['POST'])
 def set_setting(setting_name):
@@ -29,12 +30,9 @@ def read_settings_file():
         with open('../settings/settings.yml', 'r') as f:
             lines = f.readlines()
             for line in lines:
-                try:
-                    key, value = line.split(':')
-                except ValueError:
-                    continue
-                value = value.strip().strip('\n')
-                settings[key] = value
+				key, value = line.split(':')
+				value = value.strip().strip('\n')
+				settings[key] = value
         return settings
     except IOError:
         return None

@@ -7,9 +7,8 @@ import requests
 
 
 def getSettings():
-	req = requests.get("http://localhost:5000/settings/max_temp/")
-	print(req.json())
-
+	cut = requests.get("http://localhost:5000/settings/")
+	print(cut)
 
 def switchOn():
 	print("Switching on")
