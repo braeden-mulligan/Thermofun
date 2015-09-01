@@ -16,6 +16,7 @@ def settings():
         write_settings_file(settings)
     return render_template('main.html', settings=settings)
 
+<<<<<<< Updated upstream
 @app.route('/settings/<setting_name>/', methods=['GET'])
 def get_setting(setting_name):
     settings = read_settings_file()
@@ -32,6 +33,9 @@ def get_setting(setting_name):
 @app.route('/settings/<setting_name>/', methods=['POST'])
 def set_setting(setting_name):
     pass
+=======
+    
+>>>>>>> Stashed changes
 
 def read_settings_file():
     settings = {}

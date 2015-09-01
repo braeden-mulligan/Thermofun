@@ -2,22 +2,30 @@
 # Thermostat controller
 
 import time
-#import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
+import requests
+
+
+def getSettings(
+	req = requests.get("http://localhost:5000/settings/max_temp/")
+
 
 def switchOn():
-#	GPIO.output(27, 1)
-	time.sleep(0.265)
-#	GPIO.output(27, 0)
+	print("Switching on")
+	GPIO.output(27, 1)
+	time.sleep(0.275)
+	GPIO.output(27, 0)
 
 def switchOff():
-#	GPIO.output(17, 1)
+	print("Switching off")
+	GPIO.output(17, 1)
 	time.sleep(0.265)
-#	GPIO.output(17, 0)
+	GPIO.output(17, 0)
 
 if __name__ == "__main__":
-#	GPIO.setmode(GPIO.BCM)
-#	GPIO.setup(27, GPIO.OUT)
-#	GPIO.setup(17, GPIO.OUT)
+	GPIO.setmode(GPIO.BCM)
+	GPIO.setup(27, GPIO.OUT)
+	GPIO.setup(17, GPIO.OUT)
 
 	enable = 0
 	cutoff = 25.0
@@ -38,28 +46,28 @@ if __name__ == "__main__":
 		with open("../settings/settings.yml", 'r') as settings:
 			for line in settings:
 				if line.split(": ")[0] == "enabled":
-					enable = line.split(": ")[1]
+					enable = (float)(line.split(": ")[1])
 				elif line.split(": ")[0] == "max_temp":
-					cutoff = line.split(": ")[1]
+					cutoff = (float)(line.split(": ")[1])
 				elif line.split(": ")[0] == "target_temp":
-					target = line.split(": ")[1]
+					target = (float)(line.split(": ")[1])
 		thresh_high = target + 1.0
 		thresh_low = target - 1.0
 
-		if (thermo > cutoff) or (enable == 0) :
-			if active == 1:
+		if (thermo > cutoff) or (not enable) :
+			if active:
 				switchOff()
 				active = 0
-			time.sleep(30)
+			time.sleep(5)
 		else:
-			if (thermo < thresh_low) and (active == 0):
+			if (thermo < thresh_low) and ( not active):
 				switchOn()
 				active = 1
-			elif (thermo > thresh_high) and (active == 1):
+			elif (thermo > thresh_high) and (active):
 				switchOff()
 				active = 0
 			
-			time.sleep(30)
+			time.sleep(5)
 
 	# Only useful if user can set a parameter to exit the loop
-#	GPIO.cleanup()
+	GPIO.cleanup()
