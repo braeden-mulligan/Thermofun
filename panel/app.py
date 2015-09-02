@@ -9,16 +9,8 @@ def settings():
 @app.route('/settings/', methods=['GET'])
 def get_setting():
 	settings = read_settings_file()
-	data = []
-	for item in settings:
-		response = jsonify(
-			setting_name=item,
-			setting_value=item[setting_name])
-		data[item] = response
-	else:
-		response = jsonify(message="Settings not found!")
-		response.status_code = 404
-	return data
+	response = jsonify(settings)
+	return response
 
 @app.route('/settings/<setting_name>/', methods=['POST'])
 def set_setting(setting_name):

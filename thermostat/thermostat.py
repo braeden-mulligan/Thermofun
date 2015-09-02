@@ -7,8 +7,8 @@ import requests
 
 
 def getSettings():
-	cut = requests.get("http://localhost:5000/settings/")
-	print(cut)
+	r = requests.get("http://localhost:9090/settings/")
+	print(r.json())
 
 def switchOn():
 	print("Switching on")
