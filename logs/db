@@ -1,0 +1,33 @@
+Wed Sep  2 01:06:25 
+Wed Sep  2 01:06:25 warning: 32-bit servers don't have journaling enabled by default. Please use --journal if you want durability.
+Wed Sep  2 01:06:25 
+Wed Sep  2 01:06:25 [initandlisten] MongoDB starting : pid=4103 port=27017 dbpath=/home/pi/Documents/Software/Thermofun/data/db 32-bit host=debian-pi
+Wed Sep  2 01:06:25 [initandlisten] 
+Wed Sep  2 01:06:25 [initandlisten] ** NOTE: This is a development version (2.1.1) of MongoDB.
+Wed Sep  2 01:06:25 [initandlisten] **       Not recommended for production.
+Wed Sep  2 01:06:25 [initandlisten] 
+Wed Sep  2 01:06:25 [initandlisten] ** NOTE: when using MongoDB 32 bit, you are limited to about 2 gigabytes of data
+Wed Sep  2 01:06:25 [initandlisten] **       see http://blog.mongodb.org/post/137788967/32-bit-limitations
+Wed Sep  2 01:06:25 [initandlisten] **       with --journal, the limit is lower
+Wed Sep  2 01:06:25 [initandlisten] 
+Wed Sep  2 01:06:25 [initandlisten] db version v2.1.1, pdfile version 4.5
+Wed Sep  2 01:06:25 [initandlisten] git version: f457ff42ec37f2562d1a5ff06b4d96a861414c94
+Wed Sep  2 01:06:25 [initandlisten] build info: Linux debian-pi 3.18.11+ #781 PREEMPT Tue Apr 21 18:02:18 BST 2015 armv6l BOOST_LIB_VERSION=1_49
+Wed Sep  2 01:06:25 [initandlisten] options: { config: "/home/pi/Documents/Software/Thermofun/configs/mongodb.conf", dbpath: "/home/pi/Documents/Software/Thermofun/data/db", fork: "true", logappend: "true", logpath: "/home/pi/Documents/Software/Thermofun/logs/db", quiet: "true" }
+Wed Sep  2 01:06:25 [initandlisten] waiting for connections on port 27017
+Wed Sep  2 01:06:25 [websvr] admin web console waiting for connections on port 28017
+Wed Sep  2 01:06:28 got signal 15 (Terminated), will terminate after current cmd ends
+Wed Sep  2 01:06:28 [interruptThread] now exiting
+Wed Sep  2 01:06:28 dbexit: 
+Wed Sep  2 01:06:28 [interruptThread] shutdown: going to close listening sockets...
+Wed Sep  2 01:06:28 [interruptThread] closing listening socket: 5
+Wed Sep  2 01:06:28 [interruptThread] closing listening socket: 6
+Wed Sep  2 01:06:28 [interruptThread] closing listening socket: 7
+Wed Sep  2 01:06:28 [interruptThread] removing socket file: /tmp/mongodb-27017.sock
+Wed Sep  2 01:06:28 [interruptThread] shutdown: going to flush diaglog...
+Wed Sep  2 01:06:28 [interruptThread] shutdown: going to close sockets...
+Wed Sep  2 01:06:28 [interruptThread] shutdown: waiting for fs preallocator...
+Wed Sep  2 01:06:28 [interruptThread] shutdown: closing all files...
+Wed Sep  2 01:06:28 [interruptThread] closeAllFiles() finished
+Wed Sep  2 01:06:29 [interruptThread] shutdown: removing fs lock...
+Wed Sep  2 01:06:29 dbexit: really exiting now
