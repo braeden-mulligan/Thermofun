@@ -1,0 +1,99 @@
+body {
+  background-color: whitesmoke;
+}
+
+.page-title {
+  color: #444444;
+  font-family: Arial,sans-serif;
+  text-align: center;
+  margin-bottom: 0;
+}
+
+.temp-setter {
+  text-align: center;
+  margin: 60px 0;
+}
+
+.temp-setter.enabled-false {
+  opacity: 0.3;
+}
+
+.target-temp {
+  color: #444444;
+  font-family: Arial,sans-serif;
+  font-size: 8em;
+}
+
+.target-temp .celcius {
+  font-size: 22px;
+  vertical-align: 300%;
+}
+
+.temp-set-button {
+  color: #444444;
+  font-family: Arial,sans-serif;
+  font-size: 6em;
+  vertical-align: 15%;
+  border: 0px;
+  background-color: initial;
+  text-align: center;
+}
+
+.temp-set-button:focus {
+  outline: 0;
+}
+
+.temp-set-button:hover {
+  opacity: 0.75;
+}
+
+.temp-set-button.plus {
+  padding-right: 50px;
+}
+
+.temp-set-button.minus {
+  padding-left: 50px;
+  padding-right: 23px;
+}
+
+.power-button {
+  text-align: center;
+}
+
+.button {
+  border: 0 none;
+  border-radius: 2px 2px 2px 2px;
+  color: #FFFFFF;
+  cursor: pointer;
+  display: inline-block;
+  font-family: Arial,sans-serif;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 20px;
+  margin-bottom: 0;
+  margin-top: 10px;
+  padding: 7px 10px;
+  text-transform: none;
+  transition: all 0.3s ease 0s;
+  -moz-transition: all 0.3s ease 0s;
+  -webkit-transition: all 0.3s ease 0s;
+  width: 35%;
+  /* auto */
+  text-align: center;
+  /* DELETE WHEN WIDTH AUTO */
+}
+
+.button.light {
+  background: none repeat scroll 0 0 #999999;
+  color: #FFFFFF;
+}
+.button.light:hover {
+  opacity: 0.75;
+}
+.button.green {
+  background: none repeat scroll 0 0 #46b98a;
+  color: #FFFFFF;
+}
+.button.green:hover {
+  opacity: 0.75;
+}
