@@ -1,3 +1,2 @@
-target_temp: 29
-enabled: true
-max_temp: 33
+target_temp: 30
+enabled: True

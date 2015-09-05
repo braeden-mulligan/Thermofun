@@ -1,6 +1,7 @@
 from flask import Flask, request, render_template, jsonify, Response, make_response
 
 app = Flask(__name__)
+app.debug = True
 
 @app.route('/', methods=['GET', 'POST'])
 def settings():
@@ -10,11 +11,15 @@ def settings():
 def get_setting():
 	settings = read_settings_file()
 	response = jsonify(settings)
-	return response
+	return response, 200
 
-@app.route('/api/settings/<setting_name>/', methods=['POST'])
-def set_setting(setting_name):
-    pass
+@app.route('/api/settings/', methods=['POST'])
+def set_setting():
+    settings = request.get_json()
+    if not 'enabled' in settings or not 'target_temp' in settings:
+        abort(400)
+    success = write_settings_file(settings)
+    return jsonify(test="Test")
 
 def read_settings_file():
     settings = {}
