@@ -1,3 +1,3 @@
 target_temp: 29
-enabled: 1
+enabled: true
 max_temp: 33

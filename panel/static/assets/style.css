@@ -56,6 +56,25 @@ body {
   padding-right: 23px;
 }
 
+.error-box {
+  background-color: #E0645C;
+  color: #FFFFFF;
+  padding: 3px 12px;
+  border-radius: 8px;
+  margin-top: 25px;
+}
+
+.error-box pre {
+  white-space: pre-wrap;
+  padding-left: 15px;
+}
+
+.error-box h3 {
+  color: #FFFFFF;
+  font-family: Arial,sans-serif;
+  margin-bottom: 0px;
+}
+
 .power-button {
   text-align: center;
 }

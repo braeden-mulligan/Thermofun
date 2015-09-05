@@ -6,13 +6,13 @@ app = Flask(__name__)
 def settings():
     return make_response(open('templates/index.html').read())
 
-@app.route('/settings/', methods=['GET'])
+@app.route('/api/settings/', methods=['GET'])
 def get_setting():
 	settings = read_settings_file()
 	response = jsonify(settings)
 	return response
 
-@app.route('/settings/<setting_name>/', methods=['POST'])
+@app.route('/api/settings/<setting_name>/', methods=['POST'])
 def set_setting(setting_name):
     pass
 

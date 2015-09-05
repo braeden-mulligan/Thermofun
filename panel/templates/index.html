@@ -19,5 +19,14 @@
     <button ng-click="toggleEnabled()" ng-if="!enabled" class="button light">ENABLE</button>
     <button ng-click="toggleEnabled()" ng-if="enabled" class="button green">DISABLE</button>
   </div>
+
+  <div ng-if="wasError" class="error-box">
+    <div>
+      <h3>Error!</h2>
+    </div>
+    <div>
+      <pre>{{errorMsg}}</pre>
+    </div>
+  </div>
 </body>
 </html>
