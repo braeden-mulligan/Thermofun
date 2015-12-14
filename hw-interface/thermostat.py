@@ -73,5 +73,5 @@ if __name__ == "__main__":
 			
 			time.sleep(5)
 
-	# Only useful if user can set a parameter to exit the loop
+	# Only useful if method to exit the loop exists
 	GPIO.cleanup()
