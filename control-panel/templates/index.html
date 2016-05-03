@@ -1,32 +1,25 @@
-<html ng-app="panel">
-<head>
-  <title>Control Panel</title>
-  <link rel="stylesheet" href="/static/assets/style.css" />
-  <link rel="stylesheet" href="/static/vendor/font-awesome.min.css" />
-  <script src="/static/vendor/angular.js"></script>
-  <script src="/static/vendor/angular-route.js"></script>
-  <script src="/static/app/panel.js"></script>
+<!DOCTYPE html>
+<html>
+<head lang="en">
+	<meta charset="utf-8">
+	<title>MHN | {{ title }}</title>
+	<link href="/static/index.css" rel="stylesheet" media="screen">
 </head>
-<body ng-controller="mainController">
-
-  <div class="temp-setter enabled-{{enabled}}">
-    <button ng-click="decreaseTemp()" class="temp-set-button minus">-</button>
-    <span class="target-temp">{{targetTemp}}<span class="celcius">&deg;C</span></span>
-    <button ng-click="increaseTemp()" class="temp-set-button plus">+</button>
-  </div>
-
-  <div class="power-button">
-    <button ng-click="toggleEnabled()" ng-if="!enabled" class="button light">ENABLE</button>
-    <button ng-click="toggleEnabled()" ng-if="enabled" class="button green">DISABLE</button>
-  </div>
-
-  <div ng-if="wasError" class="error-box">
-    <div>
-      <h3>Error!</h2>
-    </div>
-    <div>
-      <pre>{{errorMsg}}</pre>
-    </div>
-  </div>
+<body>
+	<h1>Mulligan Home Network</h1>
+	<h3>{{ title }}</h3>
+	<p>{{ p0 }}</p>
+	{% if pageType == "about" %}
+		<p>Contact Braeden for further information.</p>
+	{% elif pageType == "thermostat" %}
+		<p>Current temperature: {{ p1 }}&deg;C
+			<br>Target temperature: {{ p2 }}&deg;C</p>
+		<form class="temp-form" action="" method="post">
+			<span>Change target:
+				<input class="temp-display" type="text" name="temp-display">
+			</span>
+			<input class="temp-change" type="submit" value="Submit"></button>
+		</form>
+	{% endif %}
 </body>
 </html>

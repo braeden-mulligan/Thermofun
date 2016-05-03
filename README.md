@@ -1,7 +1,21 @@
-# Thermofun
+Thermofun
+=====
 
-## Run
+Overview
+-----
+This project is a digital thermostat to be interacted with via web interface. It uses a raspberry pi as a web server to obtain user input for climate settings.
+The pi should also run a program to control the GPIO for reading a thermometer and to activate the HVAC system, subject to the user's settings.
 
-1. Install prerequisites `pip install -r requirements.txt`
-2. Run `uwsgi uwsgi.ini` from the *./configs/* directory
-3. Connect via port 9090
+Documentation
+-----
+The project is currently in a prototyping phase.
+
+Authors
+-----
+Braeden Mulligan,   
+John Zwiep
+
+Legal
+-----
+Read LICENCE
+
