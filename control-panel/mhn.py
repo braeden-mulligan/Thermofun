@@ -46,15 +46,16 @@ def update_settings(setlist):
 @app.route('/', methods=['GET'])
 def index():
 	t = "Homepage"
-	p = ["Welcome to the Mulligan Home Network."]
-	return render_template("index.html", title=t, paragraph=p[0])
+	p = ["Welcome to the Mulligan home automation system.  Click on a link above for access to site pages and modules."]
+	pT = "home"
+	return render_template("index.html", title=t, p0=p[0], pageType=pT)
 
 @app.route('/about', methods=['GET'])
 def about_page():
 	t = "About"
-	p = ["This website contains automation features for the house.", "Currently working features: "]
+	p = ["This website contains automation features for the house.", "Currently working modules: ", "Thermostat", "???"]
 	pT = "about"
-	return render_template("index.html", title=t, paragraph=p[0]+" "+p[1], pageType=pT)
+	return render_template("index.html", title=t, p0=p[0], p1=p[1], p2=p[2], p3=p[3], pageType=pT)
 
 @app.route('/thermostat/', methods=['GET', 'POST']) 
 def thermostat_page():

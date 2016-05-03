@@ -6,11 +6,29 @@
 	<link href="/static/index.css" rel="stylesheet" media="screen">
 </head>
 <body>
-	<h1>Mulligan Home Network</h1>
+	<div class="header">
+		<h1>Mulligan Home Network</h1>
+		<a href="{{ url_for('index') }}">Home</a>
+		<a href="{{ url_for('thermostat_page') }}">Thermostat</a>
+		<a href="{{ url_for('about_page') }}">About</a>
+	</div>
 	<h3>{{ title }}</h3>
-	<p>{{ p0 }}</p>
-	{% if pageType == "about" %}
+
+	{% if pageType == "home" %}
+		<p>{{ p0 }}</p>
+	{% elif pageType == "about" %}
 		<p>Contact Braeden for further information.</p>
+
+<!-- Temporary hardcoding -->
+		<div class="feature_list">
+			<h4>{{ p1 }}</h4>
+			<ul>
+				<li>{{ p2 }}</li>
+				<li>{{ p3 }}</li>
+			</ul>
+		</div>
+<!-- -->
+
 	{% elif pageType == "thermostat" %}
 		<p>Current temperature: {{ p1 }}&deg;C
 			<br>Target temperature: {{ p2 }}&deg;C</p>
@@ -21,5 +39,6 @@
 			<input class="temp-change" type="submit" value="Submit"></button>
 		</form>
 	{% endif %}
+
 </body>
 </html>
