@@ -1,20 +1,15 @@
 #!/usr/bin/env python
 # Thermostat controller
 
-import time
-import RPi.GPIO as GPIO
-import requests
-import sys
-import signal
+# NOTE: Currently lacking error handling !!
+# TODO: Support HVAC schedules
 
+import time, sys, signal
+import RPi.GPIO as GPIO
+# import requests # Not sure why this was here
+import sqlite3
 
 def main():
-
-	GPIO.setmode(GPIO.BCM)
-	GPIO.setup(27, GPIO.OUT)
-	GPIO.setup(17, GPIO.OUT)
-
-	active = 0
 
 	def exitHandler( signum, frame ):
 		if (active):		
@@ -22,68 +17,104 @@ def main():
 		GPIO.cleanup()
 		sys.exit()
 
+	signal.signal(signal.SIGTERM, exitHandler)
+	signal.signal(signal.SIGINT, exitHandler)
+
+# Pin control ---
+	GPIO.setmode(GPIO.BCM) # Pin numbering scheme.
+	GPIO.setup(17, GPIO.OUT)
+
 	def switchOn():
-		GPIO.output(27, 1)
-		time.sleep(0.275)
-		GPIO.output(27, 0)
+		GPIO.output(17, 1)
+# Debugging.
+		print("Switched ON at " + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
 		return 1
 
 	def switchOff():
-		GPIO.output(17, 1)
-		time.sleep(0.215)
 		GPIO.output(17, 0)
+# Debugging.
+		print("Switched OFF at " + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
 		return 0
+# ---
 
-#	def exitLog():
-#	def dataLog():
+# Database ---
+	DATABASE = '/home/pi/Documents/Software/Thermofun/control-panel/db/mhn.db'
+	def dbConnect():
+		return sqlite3.connect(DATABASE)
+
+# TODO: Support multiple settings profiles.
+	def selectSettings(name):
+		setlist = [1, None, 0, 0, 0, 0]
+		db = dbConnect()
+		curs = db.cursor()
+		curs.execute('SELECT * FROM settings WHERE name=?', (name,))
+		row = curs.fetchall()
+		for i in range(6):
+			setlist[i] = row[0][i]
+		db.close()
+		return setlist
+
+# Should be passed a six-element list "settings" and "current temperature" float
+	def updateSettings(setlist, val):
+		db = dbConnect()
+		curs = db.cursor()
+		name = setlist[1]
+		curs.execute('UPDATE settings SET temp_status=? WHERE name=?', (val, name))
+		db.commit()
+		db.close()
+		return 0
+# ---
+
+# Settings order: [id, name, temp_status, temp_target, temp_max, enable]
+	settingslist = [1, None, 0, 0, 0, 0]
+	threshold_high = settingslist[3] + 0.250
+	threshold_low = settingslist[3] - 0.375
 	
-	enable = 0
-	cutoff = 25.000
-	target = 20.000
-	thresh_high = target + 0.250
-	thresh_low = target - 0.375
-	thermo = 20.0
-#	scheds = []
-
-#TODO: Avoid unecessary reads, mod out a count
+	temp_current = 0
+	enable = 1
+	active = 0
 	cycle = 0
-	
-	signal.signal( signal.SIGTERM, exitHandler )
-	signal.signal( signal.SIGINT, exitHandler )
 
-	while True:
-		with open("/sys/bus/w1/devices/28-0000054bcb79/w1_slave", 'r') as poll:
+#	def dataLog():
+
+# Debugging.
+	print("Initializations complete.")
+	while 1:
+		settingslist = selectSettings('Default')
+		threshold_high = settingslist[3] + 0.250
+		threshold_low = settingslist[3] - 0.375
+
+		with open('/sys/bus/w1/devices/28-0000054bcb79/w1_slave', 'r') as poll:
 			measure = poll.readline()
 			if(measure.split()[11] == "YES"):
 				measure = poll.readline()
-				thermo = ((float)(measure.split("t=")[1]))/1000
+				temp_current = ((float)(measure.split("t=")[1]))/1000
 
-		#TODO: if <not schedules active>
-		with open("../settings/settings.yml", 'r') as settings:
-			for line in settings:
-				if line.split(": ")[0] == "enabled":
-					enable = (line.split(": ")[1]) #TODO: Check API
-				elif line.split (": ")[0] == "max_temp":
-					cutoff = (float)(line.split(": ")[1])
-				elif line.split(": ")[0] == "target_temp":
-					target = (float)(line.split(": ")[1])
-		thresh_high = target + 0.250
-		thresh_low = target - 0.375
+		updateSettings(settingslist, temp_current)
 
-# TODO: remove after debugging
-		enable = 1;
-
-		if ((thermo > cutoff) or (not enable)):
+		if ( (temp_current > settingslist[4]) or (not settingslist[5]) ):
 			if (active):
 				active = switchOff()
 		else:
-			if ((thermo < thresh_low) and (not active)):
-				active = switchOn()
-			if ((thermo > thresh_high) and (active)):
-				active = switchOff()
+			if ( (temp_current < threshold_low) ):
+				if ( not active ):
+					active = switchOn()
+			if ( (temp_current > threshold_high) ):
+				if ( active ):
+					active = switchOff()
 
 		time.sleep(5)
 
+# Temporary safety precaution ---
+		if( active ):
+			cycle += 1
+# Switch off after 25 minutes of continuous activity.
+			if ( cycle >= 300 ):
+				active = switchOff()
+				cycle = 0
+				print("* Furnace overtime! Shutting off for 30 minutes.")
+				time.sleep(1800)
+# ---
 
 if __name__ == "__main__":
 	main()

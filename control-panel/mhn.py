@@ -6,19 +6,19 @@ from flask import Flask, render_template, request, url_for, g
 app = Flask(__name__)
 
 # Database functions ---
-DATABASE = 'db/mhn.db'
+DATABASE = '/home/pi/Documents/Software/Thermofun/control-panel/db/mhn.db'
 def db_connect():
 	return sqlite3.connect(DATABASE)
 
 # Get a row from "settings" table.
 def select_settings(name):
 # Settings order: id, name, temp_status, temp_target, temp_max, enable
-	setlist = [1,1,1,1,1,0]
+	setlist = [1, None, 0, 0, 0, 0]
 	g.db = db_connect()
 	curs = g.db.cursor()
-	curs.execute('select * from settings where name=?', (name,))
+	curs.execute('SELECT * FROM settings WHERE name=?', (name,))
 	row = curs.fetchall()
-	for i in range(0,5):
+	for i in range(6):
 		setlist[i] = row[0][i]
 # Debugging.
 	print("DATABASE RETURN: " + str(setlist))
@@ -66,7 +66,7 @@ def thermostat_page():
 	if request.method == 'GET':
 #TODO: Report temp_max, enable.
 #TODO: JS update temp_status with ajax in/decrementing.
-		setlist = select_settings("Default")
+		setlist = select_settings('Default')
 		tstat = str(setlist[2])
 		ttarg = str(setlist[3])
 
@@ -74,13 +74,12 @@ def thermostat_page():
 #TODO: Implement update temp_max, enable; allow variable row name
 #TODO: Add confirmation flash
 		val = float(request.form['temp-display'])
-		name = "Default"
-		setlist = select_settings(name)
-		setlist[3] = val
-		update_settings(setlist)
+		settingslist = select_settings('Default')
+		settingslist[3] = val
+		update_settings(settingslist)
 		
-		tstat = str(setlist[2])
-		ttarg = str(setlist[3])
+		tstat = str(settingslist[2])
+		ttarg = str(settingslist[3])
 
 #TODO: Make dict for render_template?
 	return render_template('index.html', title=t, p0=p[0], p1=tstat, p2=ttarg, pageType=pT)
