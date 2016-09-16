@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Thermostat</h2>
+<p>
+	Current temperature: {{ temp_current }}&deg;C
+</p>
+<div id="profile-display">
+	<h3>Active settings profile:
+		<form method="POST" style="display:inline;" id="profile-select" onSubmit="return methodVerify()">
+			<select name="profile_selection" id="profile-selection">
+				{% for profile in profiles %}
+				<option value="{{ profile.name }}">{{ profile.name }}</option>
+				{% endfor %}
+				<option value="profile_add">CREATE NEW</option>
+<!-- Temporary solution -->
+				<option value="profile_delete">DELETE</option>
+			</select>
+			<input name="" id="profile-change" type="submit" value="Go">
+		</form>
+	</h3>
+	Current target: {{ temp_target }}&deg;C <br>
+	<form method="POST" action="/thermostat/target_change">
+		<span id="target-modify-label">Change target: </span>
+		<input name="target_modify" type="text">
+		<input id="target-modify" type="submit" value="Submit">
+	</form>
+	<ol id="schedule-list"> Schedules:
+	{% if schedules %}
+		{% for sched in schedules %}
+		<form method="POST">
+			<input name="schedule_modify" type="hidden" value="{{ sched.id }}">
+			<li>Target: {{ sched.temperature }}&deg;C <br>
+				Start Time: {{ sched.time }}<br>
+				<span id="remove-schedule">Edit</span> | 
+				<span id="edit-schedule" onClick="this.parentNode.parentNode.submit()">Remove</span>
+			</li>
+		</form>
+		{% endfor %}
+	{% else %}
+		<br>
+		None found.
+	{% endif %}
+	</ol>
+	<span id="add-schedule" onClick="addSchedule()">Add schedule</span>
+</div>
+{% endblock %}

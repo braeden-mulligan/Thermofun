@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="feature-list">
+	<h2>Available Modules</h2>
+	<ul>
+		<li><a href="{{ url_for('thermostat') }}">Thermostat</a></li>
+		<li><a href="{{ url_for('sprinkler') }}">Garden Irrigator</a></li>
+	</ul>
+</div>
+{% endblock %}

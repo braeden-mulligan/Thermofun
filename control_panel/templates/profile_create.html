@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div>
+	<h3>Create new thermal profile:</h3>
+	<form method="POST"> 
+		<span id="new-profile-name-label">Name: </span>
+		<input name="new_profile_name" type="text"> <br>
+		<span id="new-profile-temperature-label">Temperature: </span>
+		<input name="new_profile_temperature" type="text">
+		<p class="tooltip">
+			#Tooltip# This is a default target temperature to be initialized on profile select.  Schedules will only modify the target at their scheduled times, not immediately when a profile is selected.
+		</p>
+
+		<h4>Add schedules:</h4>
+		<span id="add-new-sched" onClick="initSchedule()">+</span>
+		<ol id="new-schedule-list">
+
+		</ol>
+		<input type="submit" value="Create">
+	</form>
+</div>
+{% endblock %}

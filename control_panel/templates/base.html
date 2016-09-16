@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+	<meta charset="utf-8">
+	<link rel="stylesheet" type="text/css" href="/static/page.css" media=""> 
+	{% if title %}	
+	<title>MLAN | {{ title }}</title>
+	{% else %}
+	<title>MLAN</title>
+	{% endif %}
+</head>
+<body>
+	<div class="header">
+		<h1>Mulligan Home LAN</h1>
+		<a href="{{ url_for('index') }}">Home</a>
+		<a href="#">About</a>
+		<a href="{{ url_for('thermostat') }}">Thermostat</a>
+	</div>
+	<hr>
+	
+	{% block content %}	{% endblock %}
+
+</body>
+<script type="text/javascript" src="/static/ui.js"></script>
+</html>
