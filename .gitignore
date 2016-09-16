@@ -1,0 +1,18 @@
+# Python
+*.py[cod]
+
+# C extensions
+*.so
+
+# Dev environment
+env/
+tmp/
+*.db
+
+# Flask
+instance/
+.webassets-cache
+
+# Other
+note*
+*.log
