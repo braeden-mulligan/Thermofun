@@ -1,12 +1,5 @@
 from flask import render_template, url_for, request, redirect
-from control_panel import app, db, models, temp_target, temp_current
-import time
-
-def eventLog(message):
-	entry = message + " " + time.strftime("%Y-%m-%d, %H:%M:%S")
-	with open("events.log", "a") as f:
-		f.write(entry)
-
+from control_panel import app, db, models, temp_target, temp_current, subroutine
 
 @app.route('/')
 @app.route('/index')
@@ -19,8 +12,6 @@ def index():
 def thermostat():
 	global temp_current
 	global temp_target
-	print(str(temp_target) + " from GET")
-	content = {'title':"Thermostat"}
 
 	profiles = models.Profile.query.all()
 	profile_active = []
@@ -31,16 +22,16 @@ def thermostat():
 	if len(profile_active) > 1:
 		profile_active[0] = models.Profile.query.filter_by(name='DEFAULT').first()
 		if DEBUG:
-			eventLog("Too many active profiles")
+			subroutine.eventLog("Too many active profiles")
 	if len(profile_active) < 1:
 		profile_active[0] = models.Profile.query.filter_by(name='DEFAULT').first()
 		if DEBUG:
-			eventLog("No active profiles")
+			subroutine.eventLog("No active profiles")
 
 # Choose profile.
 # TODO:
 	# socket notification
-	# change method of submission?
+	# change style of submissions
 	# data validation
 	if request.method == 'POST':
 		if 'profile_selection' in request.form:
@@ -48,11 +39,11 @@ def thermostat():
 			if selection == 'profile_delete':
 				marked = profile_active[0]
 				if marked.name == 'DEFAULT':
-					eventLog("Attempted deletion of DEFAULT profile")
+					subroutine.eventLog("Attempted deletion of DEFAULT profile")
 				else:
 					default = models.Profile.query.filter_by(name='DEFAULT').first()
 # TODO:
-	# handle errors
+	# handle errors here, there must always be only one active
 					default.active = True
 					profile_active[0] = default
 					profiles.remove(marked)
@@ -64,12 +55,6 @@ def thermostat():
 				new_active.active = True
 				db.session.commit()
 				profile_active[0] = new_active
-				temp_target = new_active.temperature
-# Bring active profile to top for display.
-# TODO:?
-	# sort lexicographically.
-	profiles.insert(0, profiles.pop(profiles.index(profile_active[0])))
-	content['profiles'] = profiles
 
 # Modify profile's existing schedules.
 	if request.method == 'POST':
@@ -92,9 +77,27 @@ def thermostat():
 					new_schedule.profile = profile_active[0]
 					db.session.add(new_schedule)
 					db.session.commit()
-	content['schedules'] = profile_active[0].schedules.all()
-	content['temp_current'] = round(temp_current, 1)
-	content['temp_target'] = round(temp_target, 1)
+
+# Process content before shipping.
+	temp_target = profile_active[0].temperature
+# Bring active profile to top for display.
+# TODO:
+	# sort lexicographically?
+	profiles.insert(0, profiles.pop(profiles.index(profile_active[0])))
+	schedules = profile_active[0].schedules.all() 
+	for s in schedules:
+		hr = s.time / 100
+		mi = s.time - (hr * 100)
+		s.time = "%02d"%hr + ":" + "%02d"%mi
+		s.temperature = "%0.2f"%s.temperature
+	for p in profiles:
+		p.temperature = "%0.2f"%p.temperature
+
+	content = {'title':"Thermostat"}
+	content['profiles'] = profiles
+	content['schedules'] = schedules
+	content['temp_current'] = str(round(temp_current, 1))
+	content['temp_target'] = str(round(temp_target, 1))
 
 	return render_template('thermostat.html', **content)
 # END def thermostat()
