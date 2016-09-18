@@ -43,6 +43,7 @@ def thermostat():
 				else:
 					default = models.Profile.query.filter_by(name='DEFAULT').first()
 # TODO:
+	# delete related records
 	# handle errors here, there must always be only one active
 					default.active = True
 					profile_active[0] = default
@@ -55,6 +56,7 @@ def thermostat():
 				new_active.active = True
 				db.session.commit()
 				profile_active[0] = new_active
+				temp_target = profile_active[0].temperature
 
 # Modify profile's existing schedules.
 	if request.method == 'POST':
@@ -79,7 +81,6 @@ def thermostat():
 					db.session.commit()
 
 # Process content before shipping.
-	temp_target = profile_active[0].temperature
 # Bring active profile to top for display.
 # TODO:
 	# sort lexicographically?
@@ -103,13 +104,17 @@ def thermostat():
 # END def thermostat()
 
 # Will also be used by hardware controller.
-@app.route('/thermostat/target_change', methods=['POST'])
+@app.route('/thermostat/target_change', methods=['GET', 'POST'])
 def target_change():
 	global temp_target
-	if 'target_modify' in request.form:
-		temp_target = round(float(request.form['target_modify']), 1)
-	return redirect(url_for('thermostat'))
-
+# GET procedure for hw controller's startup phase.
+	if request.method == 'GET':
+		return str(temp_target)
+	if request.method == 'POST':
+		if 'target_modify' in request.form:
+			temp_target = round(float(request.form['target_modify']), 1)
+		return redirect(url_for('thermostat'))
+	return redirect(url_for('index'))
 
 @app.route('/thermostat/profile_create', methods=['GET', 'POST'])
 def profile_create():
