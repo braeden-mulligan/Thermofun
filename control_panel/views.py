@@ -116,6 +116,13 @@ def target_change():
 		return redirect(url_for('thermostat'))
 	return redirect(url_for('index'))
 
+@app.route('/thermostat/current_temperature', methods=['POST'])
+def current_temperature():
+	global temp_current
+	if 'controller_data' in request.form:
+		temp_current = round(float(request.form['controller_data']), 1)
+	return str(temp_current)
+
 @app.route('/thermostat/profile_create', methods=['GET', 'POST'])
 def profile_create():
 	if request.method == 'GET':

@@ -4,7 +4,7 @@ THERMOMETER_URI = '/sys/bus/w1/devices/28-0000054b97a5/w1_slave'
 
 def eventLog(message):
 	entry = message + ": " + time.strftime("%Y-%m-%d, %H:%M:%S") + "\n"
-	with open('events.log', 'a') as f:
+	with open('controller_events.log', 'a') as f:
 		f.write(entry)
 	return 0
 
@@ -23,7 +23,7 @@ def getTemperature(dbg):
 				temperature = False
 	except IOError as err_msg:
 		if dbg:
-			eventLog("Error: %s" % str(err_msg))
+			eventLog(str(err_msg))
 	return temperature
 
 # For loading thermal profile settings:

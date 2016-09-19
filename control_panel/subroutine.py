@@ -2,7 +2,7 @@ import time
 
 def eventLog(message):
 	entry = message + ": " + time.strftime("%Y-%m-%d, %H:%M:%S") + "\n"
-	with open('events.log', 'a') as f:
+	with open('network_events.log', 'a') as f:
 		f.write(entry)
 	return 0
 

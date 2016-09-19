@@ -14,6 +14,10 @@ INTERVAL = 30
 HOST = 'localhost'
 PORT = 5001
 
+# Web server.
+HOST_S = 'localhost'
+PORT_S = 5000
+
 def main():
 	global ENABLE, INTERVAL
 	global HOST, PORT
@@ -45,7 +49,7 @@ def main():
 		GPIO.output(17, 1)
 		if DEBUG:
 			print("Switched ON at " + time.strftime("%Y-%m-%d, %H:%M:%S.", time.localtime()))
-		return 1
+		return True
 
 	def switchOff():
 		global safecycle
@@ -53,14 +57,16 @@ def main():
 		GPIO.output(17, 0)
 		if DEBUG:
 			print("Switched OFF at " + time.strftime("%Y-%m-%d, %H:%M:%S.", time.localtime()))
-		return 0
+		return False
 
 # Get current HVAC settings and status.
 # TODO:
 	# handle errors
 	agenda = subroutine.getSchedules(DEBUG)
-	temp_re = requests.get('http://'+HOST+':5000/thermostat/target_change')
+	temp_re = requests.get('http://'+HOST_S+':'+str(PORT_S)+'/thermostat/target_change')
 	temp_target = (float(temp_re.text))
+	threshold_high = temp_target + 0.250
+	threshold_low = temp_target + 0.375
 
 # Start socket to listen for settings changes from web app.
 	soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -89,44 +95,41 @@ def main():
 		GPIO.output(27, 1)
 		time.sleep(0.200)
 		temp_current = subroutine.getTemperature(DEBUG)
+		GPIO.output(27, 0)
 # TODO:
 	# verify temp read succesful
-
-		print(str(temp_current))
-		time.sleep(30)
-'''		
-# Debugging
-			print("Error count: %s" % str(errorcycle))
-# If temperature cant be read for over two minutes, switch system off
-			if ( errorcycle > 23 ):
-				if (active):
-					active = switchOff()
-					exitHandler(0, 0)
-		except:
-			print("Error: Other")
-			if (active):
-				active = switchOff()
-				exitHandler(0, 0)
-		GPIO.output(27, 0)
-
-		updateSettings(settingslist, temp_current)
-
-# Decide if furnace should switch on ---
-		if ( (temp_current > settingslist[4]) or (not settingslist[5]) ):
-			if (active):
-				active = switchOff()
-				safecycle = 0
+		if temp_current:
+			pass
 		else:
-			if ( (temp_current < threshold_low) ):
-				if ( not active ):
-					active = switchOn()
-			if ( (temp_current > threshold_high) ):
-				if ( active ):
-					active = switchOff()
-					safecycle = 0
-# ---
-		time.sleep(4.8)
+			time.sleep(9.8)
+			continue
 
+# If temperature cant be read for over two minutes, switch system off
+# TODO:
+	# implement with timer
+
+# TODO:
+	# only get when notified
+		temp_re = requests.get('http://'+HOST_S+':'+str(PORT_S)+'/thermostat/target_change')
+		temp_target = (float(temp_re.text))
+		threshold_high = temp_target + 0.250
+		threshold_low = temp_target + 0.375
+
+# TODO:
+	# error handling
+		dest = 'http://'+HOST_S+':'+str(PORT_S)+'/thermostat/current_temperature'
+		payload = {'controller_data':temp_current}
+		temp_post = requests.post(dest, data=payload)
+
+		if (temp_current < threshold_low):
+			if ( not active ):
+				active = switchOn()
+		if (temp_current > threshold_high):
+			if ( active ):
+				active = switchOff()
+
+		time.sleep(9.8)
+'''
 # Temporary safety precaution ---
 		if( active ):
 			safecycle += 1
@@ -135,8 +138,8 @@ def main():
 				active = switchOff()
 				safecycle = 0
 				print("* Furnace overtime! Shutting off for 10 minutes.")
-				with open('safety_log', 'w+') as log:
-					log.write("Activity overtime triggered.")
+				with open('controller_events.log', 'a') as log:
+					log.write("* Furnace overtime detected!")
 				time.sleep(600)
 # ---
 
