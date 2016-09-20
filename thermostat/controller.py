@@ -51,6 +51,8 @@ def furnaceSafety(reason):
 	ACTIVE = switchOff()
 	if FURNACE_FLAG:
 		FURNACE_FLAG = False
+	if reason == 'Furnace on too long!':
+		time.sleep(900.0) # Grab lock and hold to force cooldown period.
 	ACTIVE_LOCK.release()
 	if DEBUG:
 		subroutine.eventLog('* Safety switch triggered: ' + reason)
@@ -202,6 +204,21 @@ def main():
 					FURNACE_FLAG = False
 					safety_threads[furnace_index].cancel()
 		ACTIVE_LOCK.release()
+
+	# Clear dead threads if there are none running.
+	# Not guarunteed to be 100% stable but should work in practice.
+		any_alive = False
+		for i in range(len(safety_threads)):
+			if safety_threads[i].isAlive():
+				any_alive = True
+		if not any_alive:
+			if DEBUG:
+				print("Safety list cleared.")
+			del safety_threads[:]
+		else:
+			if DEBUG:
+				print("Safety list has live threads.")
+
 		if DEBUG:
 			if ACTIVE:
 				print("Furnace working...")		
