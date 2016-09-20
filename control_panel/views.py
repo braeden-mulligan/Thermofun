@@ -113,6 +113,8 @@ def target_change():
 	if request.method == 'POST':
 		if 'target_modify' in request.form:
 			temp_target = round(float(request.form['target_modify']), 1)
+		if 'controller_data' in request.form:
+			temp_target = round(float(request.form['controller_data']), 1)
 		return redirect(url_for('thermostat'))
 	return redirect(url_for('index'))
 

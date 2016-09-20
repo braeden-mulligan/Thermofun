@@ -25,13 +25,13 @@ GPIO.setup(17, GPIO.OUT)
 GPIO.setup(27, GPIO.OUT)
 
 def switchOn():
-	# GPIO.output(17, 1)
+	GPIO.output(17, 1)
 	if DEBUG:
 		print("Switched ON at " + time.strftime("%Y-%m-%d, %H:%M:%S.", time.localtime()))
 	return True
 
 def switchOff():
-	# GPIO.output(17, 0)
+	GPIO.output(17, 0)
 	if DEBUG:
 		print("Switched OFF at " + time.strftime("%Y-%m-%d, %H:%M:%S.", time.localtime()))
 	return False
@@ -82,8 +82,8 @@ def main():
 	agenda = subroutine.getSchedules(DEBUG)
 	temp_re = requests.get('http://'+HOST_S+':'+str(PORT_S)+'/thermostat/target_change')
 	temp_target = (float(temp_re.text))
-	threshold_high = temp_target + 0.250
-	threshold_low = temp_target + 0.375
+	threshold_high = temp_target - 0.250
+	threshold_low = temp_target + 0.250
 
 # Start socket to listen for settings changes from web app.
 	soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -93,7 +93,7 @@ def main():
 		print("Socket bind failed.")
 		exitHandler(None, None)
 
-	soc.listen(2)
+	soc.listen(1)
 	soc.setblocking(1)
 
 	message = {} # Should be mutable
@@ -115,9 +115,9 @@ def main():
 	while True:
 
 		if ACTIVE:
-			interval = 1.0
+			interval = 7.0
 		else:
-			interval = 10.0
+			interval = 60.0
 
 		if not ENABLE:
 			if ACTIVE:
@@ -133,18 +133,19 @@ def main():
 			continue
 
 	# Check for changes in HVAC settings.
+		if DEBUG:
+			temp_re = requests.get('http://'+HOST_S+':'+str(PORT_S)+'/thermostat/target_change')
+			temp_target = float(temp_re.text)
+			print("Target acquired: " + str(temp_target))
 		message_lock.acquire(True)
 		if message:
-			if DEBUG:
-				temp_re = requests.get('http://'+HOST_S+':'+str(PORT_S)+'/thermostat/target_change')
-				temp_target = float(temp_re.text)
-			else:
-				temp_target = float(message['target'])
-			threshold_high = temp_target + 0.250
-			threshold_low = temp_target + 0.375
+			temp_target = float(message['target'])
 			message = None
 # TODO:		get schedules
 		message_lock.release()
+
+		threshold_high = temp_target + 0.250
+		threshold_low = temp_target - 0.250
 
 	# Poll and verify thermometer reading.			
 		GPIO.output(27, 1)
@@ -154,19 +155,22 @@ def main():
 		if DEBUG:
 			print("Verifying temperature reading...")
 		if temp_current:
+			if DEBUG:
+				print("Read OK.")
 			ACTIVE_LOCK.acquire(True)
 			if THERMOMETER_FLAG:
 				THERMOMETER_FLAG = False
 				safety_threads[thermometer_index].cancel()
 			ACTIVE_LOCK.release()
 		else:
-			interval = 1.0
+			interval = 7.0
 			if DEBUG:
 				print("Could not poll temperature, trying again in "+ str(interval) + "s.")
 			ACTIVE_LOCK.acquire(True)
 			if ACTIVE and (not THERMOMETER_FLAG):
 				THERMOMETER_FLAG = True
-				safety_threads.append(threading.Timer(9.0, furnaceSafety, kwargs={'reason':'Failed to get temperature for extended period'}))
+			# Bad reads occur frequently, no need to kill furnace immediately.
+				safety_threads.append(threading.Timer(120.0, furnaceSafety, kwargs={'reason':'Failed to get temperature for extended period'}))
 				thermometer_index = len(safety_threads) - 1
 				safety_threads[-1].daemon = True
 				safety_threads[-1].start()
@@ -191,23 +195,19 @@ def main():
 					furnace_index = len(safety_threads) - 1
 					safety_threads[-1].daemon = True
 					safety_threads[-1].start()
-					if DEBUG:
-						print("Starting doomsday countdown.")
 		if (temp_current > threshold_high):
 			if ( ACTIVE ):
 				ACTIVE = switchOff()
 				if FURNACE_FLAG:
 					FURNACE_FLAG = False
 					safety_threads[furnace_index].cancel()
-					if DEBUG:
-						print("Whew, stopped the doomsday event.")
 		ACTIVE_LOCK.release()
 		if DEBUG:
 			if ACTIVE:
 				print("Furnace working...")		
 			else:
 				print("Furnace inactive.")
-			print("Sleeping for " + str(interval) +"s.")
+			print("Sleeping for " + str(interval) +"s.\n")
 		time.sleep(interval)
 	# END loop
 
