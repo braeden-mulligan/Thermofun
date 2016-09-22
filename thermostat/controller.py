@@ -1,20 +1,25 @@
 # Thermostat controller
-# TODO:
-	# midnight timer
-DEBUG = True
 
 import time, sys, signal, threading, socket, requests
 import RPi.GPIO as GPIO
 import subroutine
 
-# Control HVAC status.
+if ('--debug' in sys.argv) or ('-d' in sys.argv):
+	DEBUG = True
+else:
+	DEBUG = False
+
+# Track and control HVAC status.
 ENABLE = True
 ACTIVE = False
 ACTIVE_LOCK = threading.Lock()
+temperature = {'current':0.0, 'target':0.0}
+temperature_lock = threading.Lock() 
+
 
 # Socket config.
 HOST = 'localhost'
-PORT = 5001
+PORT = 5003
 
 # Web server.
 HOST_S = 'localhost'
@@ -40,13 +45,13 @@ def switchOff():
 # Or if furnace has been on for too long.
 # Cancel once normal operations resume.
 safety_threads = []
-#TODO: cut inACTIVE threads from list
+#TODO: cut inactive threads from list
 FURNACE_FLAG = False
 THERMOMETER_FLAG = False
 
 def furnaceSafety(reason):
 	global ACTIVE, ACTIVE_LOCK
-	global FURNACE_FLAG, FLAG_LOCK
+	global FURNACE_FLAG 
 	ACTIVE_LOCK.acquire(True)
 	ACTIVE = switchOff()
 	if FURNACE_FLAG:
@@ -58,6 +63,72 @@ def furnaceSafety(reason):
 		subroutine.eventLog('* Safety switch triggered: ' + reason)
 		print("Safety event, check logs.")
 	return 0
+
+# Globals for holding schedule data to make functions nicer.
+agenda = []
+schedules = []
+schedules_lock = threading.Lock() # TODO: mark as cruft
+
+def nextTimer():
+# TODO: Make threadsafe
+	for s in schedules:
+		s.cancel()
+		schedules.remove(s)
+	
+# Keep threads chaining off each other.
+# TODO: Probably won't cause unbounded thread creation?
+	if not agenda:
+		refresh = 24 * 3600
+		schedules.append(threading.Timer(refresh, changeTarget, kwargs={'target':None}))
+		schedules[-1].daemon = True
+		schedules[-1].start() 
+		if DEBUG:
+			print("No schedules found\n")
+	else:
+	# Do everything in seconds; avoids the 0-delay-recalculate bug while maintaining standards of scheduling specification.
+		time_of_day = (time.localtime().tm_hour) * 3600
+		time_of_day = time_of_day + ((time.localtime().tm_min) * 60)
+		time_of_day = time_of_day + (time.localtime().tm_sec)
+
+		delta_min = (24*60 + 1) * 60
+		new_target = None
+		for a in agenda:
+			a_secs = (((a[0] / 100) * 60) + (a[0] % 100)) * 60
+			time_gap = a_secs - time_of_day
+			if time_gap < 1:
+				time_gap = time_gap + (24 * 3600)
+			# OK since schedules are unique and must have a time < 24:00.
+			if time_gap < delta_min:
+				delta_min = time_gap
+				new_target = a[1]
+		if DEBUG:
+			print("Setting schedule timer for " + str(delta_min / 60)+"min " + str(delta_min % 60)+"sec.\n")
+		#if not delta_min:
+		# Otherwise it bugs out and loops wildly for [quantum of time].
+		#	time.sleep(2)
+		schedules.append(threading.Timer(delta_min, changeTarget, kwargs={'target':new_target}))
+		schedules[-1].daemon = True
+		schedules[-1].start()
+	return 0
+	
+def changeTarget(target):
+	temperature_lock.acquire(True)
+	if target:
+		temperature['target'] = target
+		dest = 'http://'+HOST_S+':'+str(PORT_S)+'/thermostat/target_change'
+		payload = {'controller_data':temperature['target']}
+		try:
+			requests.post(dest, data=payload)
+		except:
+			exitHandler(None, None)
+		if DEBUG:
+			print("Temperature set to " + str(temperature['target']) + " as scheduled.")
+	temperature_lock.release()
+	if DEBUG:
+		print("Schedule timer being recalculated.")
+	nextTimer()
+	return 0
+	
 	
 def exitHandler(signum, frame):
 	global ACTIVE, ACTIVE_LOCK
@@ -66,7 +137,8 @@ def exitHandler(signum, frame):
 		ACTIVE = switchOff()
 	ACTIVE_LOCK.release()
 	GPIO.cleanup()
-	print("Exiting gracefully.")
+	if DEBUG:
+		print("Exiting gracefully.")
 	sys.exit()
 
 
@@ -74,25 +146,31 @@ def main():
 	global ENABLE, ACTIVE, ACTIVE_LOCK
 	global HOST, PORT
 	global safety_threads, FURNACE_FLAG, THERMOMETER_FLAG
+	global agenda
 
 	signal.signal(signal.SIGTERM, exitHandler)
 	signal.signal(signal.SIGINT, exitHandler)
 	
-	temp_current = 0.0
 # Initial read of HVAC settings and status.
 # TODO: handle errors
-	agenda = subroutine.getSchedules(DEBUG)
 	temp_re = requests.get('http://'+HOST_S+':'+str(PORT_S)+'/thermostat/target_change')
-	temp_target = (float(temp_re.text))
-	threshold_high = temp_target - 0.250
-	threshold_low = temp_target + 0.250
+	temperature_lock.acquire(True)
+	temperature['target'] = (float(temp_re.text))
+	threshold_high = temperature['target'] - 0.250
+	threshold_low = temperature['target'] + 0.125
+	temperature_lock.release()
+	agenda = subroutine.getSchedules(DEBUG)
+	if DEBUG:
+		agenda.append((2002, 18))
+	nextTimer()
 
 # Start socket to listen for settings changes from web app.
 	soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	try:
 		soc.bind((HOST, PORT))
 	except socket.error:
-		print("Socket bind failed.")
+		if DEBUG:
+			print("Socket bind failed.")
 		exitHandler(None, None)
 
 	soc.listen(1)
@@ -119,7 +197,7 @@ def main():
 		if ACTIVE:
 			interval = 7.0
 		else:
-			interval = 60.0
+			interval = 49.0
 
 		if not ENABLE:
 			if ACTIVE:
@@ -134,31 +212,39 @@ def main():
 	# query for enable
 			continue
 
-	# Check for changes in HVAC settings.
 		if DEBUG:
 			temp_re = requests.get('http://'+HOST_S+':'+str(PORT_S)+'/thermostat/target_change')
-			temp_target = float(temp_re.text)
-			print("Target acquired: " + str(temp_target))
+			temperature['target'] = float(temp_re.text)
+			print("Target acquired: " + str(temperature['target']))
+	# Check for notification of changes to HVAC settings.
+		target_change = None
 		message_lock.acquire(True)
-		if message:
-			temp_target = float(message['target'])
-			message = None
-# TODO:		get schedules
+		if message: 
+			target_change = float(message['target'])
+			del message['target']
+			agenda = subroutine.getSchedules(DEBUG)
+		# Recalculate next schedule
+			nextTimer()
 		message_lock.release()
+		
+		temperature_lock.acquire(True)
+		if target_change:
+			temperature['target'] = target_change
+		threshold_high = temperature['target'] + 0.250
+		threshold_low = temperature['target'] - 0.250
+		temperature_lock.release()
 
-		threshold_high = temp_target + 0.250
-		threshold_low = temp_target - 0.250
-
-	# Poll and verify thermometer reading.			
-		GPIO.output(27, 1)
-		time.sleep(0.200)
-		temp_current = subroutine.getTemperature(DEBUG)
-		GPIO.output(27, 0)
+	# Poll and verify thermometer reading.
 		if DEBUG:
 			print("Verifying temperature reading...")
-		if temp_current:
+	# Provide temporary-only power to thermometer to avoid heating it above ambient.
+		GPIO.output(27, 1)
+		time.sleep(1.000)
+		temperature['current'] = subroutine.getTemperature(DEBUG)
+		GPIO.output(27, 0)
+		if temperature['current']:
 			if DEBUG:
-				print("Read OK.")
+				print("Read OK. " + str(temperature['current']) + u"\u00B0C")
 			ACTIVE_LOCK.acquire(True)
 			if THERMOMETER_FLAG:
 				THERMOMETER_FLAG = False
@@ -184,11 +270,11 @@ def main():
 # TODO:
 	# error handling
 		dest = 'http://'+HOST_S+':'+str(PORT_S)+'/thermostat/current_temperature'
-		payload = {'controller_data':temp_current}
-		temp_post = requests.post(dest, data=payload)
+		payload = {'controller_data':temperature['current']}
+		requests.post(dest, data=payload)
 
 		ACTIVE_LOCK.acquire(True)
-		if (temp_current < threshold_low):
+		if (temperature['current'] < threshold_low):
 			if ( not ACTIVE ):
 				ACTIVE = switchOn()
 				if not FURNACE_FLAG:
@@ -197,7 +283,7 @@ def main():
 					furnace_index = len(safety_threads) - 1
 					safety_threads[-1].daemon = True
 					safety_threads[-1].start()
-		if (temp_current > threshold_high):
+		if (temperature['current'] > threshold_high):
 			if ( ACTIVE ):
 				ACTIVE = switchOff()
 				if FURNACE_FLAG:

@@ -113,9 +113,10 @@ def target_change():
 	if request.method == 'POST':
 		if 'target_modify' in request.form:
 			temp_target = round(float(request.form['target_modify']), 1)
+			return redirect(url_for('thermostat'))
 		if 'controller_data' in request.form:
 			temp_target = round(float(request.form['controller_data']), 1)
-		return redirect(url_for('thermostat'))
+			return str(temp_target)
 	return redirect(url_for('index'))
 
 @app.route('/thermostat/current_temperature', methods=['POST'])

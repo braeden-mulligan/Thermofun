@@ -1,4 +1,6 @@
-import time, os, sys
+# Helper functions for controller
+
+import time, os, sys, threading
 
 THERMOMETER_URI = '/sys/bus/w1/devices/28-0000054b97a5/w1_slave'
 
@@ -17,11 +19,12 @@ def getTemperature(dbg):
 			if measure.split()[11] == "YES":
 				measure = poll.readline()
 				temperature = (float(measure.split("t=")[1])) / 1000
-			if temperature > 60:
+			if temperature > 80:
 			# Thermometer gave an error value.
 				temperature = None
-				eventLog("Thermometer malfunction")
+				eventLog("Thermometer error value reported")
 	except IOError as err_msg:
+		dbg = False
 		if dbg:
 			eventLog(str(err_msg))
 	return temperature
@@ -37,10 +40,10 @@ from control_panel import db, models
 def getSchedules(dgb):
 	profile_active = models.Profile.query.filter_by(active=True).first()
 	schedules = profile_active.schedules.all()
-	times = {}
+	timetable = []
 	for s in schedules:
-		times[s.time] = s.temperature
-	return times
+		timetable.append((s.time, s.temperature))
+	return timetable
 
 # Listen for changes to settings.
 # TODO:
@@ -56,5 +59,6 @@ def getNotification(soc, msg, lck, dbg):
 		lck.acquire(True)
 		msg[settings[0]] = settings[1]
 		lck.release()
+		conn.shutdown(socket.SHUT_RDWR)
 		conn.close()
 	return 0

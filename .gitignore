@@ -8,6 +8,7 @@
 env/
 tmp/
 *.db
+testsuite.py
 
 # Flask
 instance/
