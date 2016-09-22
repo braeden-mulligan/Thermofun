@@ -1,6 +1,6 @@
 # Helper functions for controller
 
-import time, os, sys, threading
+import time, os, sys, threading, socket
 
 THERMOMETER_URI = '/sys/bus/w1/devices/28-0000054b97a5/w1_slave'
 
@@ -59,6 +59,8 @@ def getNotification(soc, msg, lck, dbg):
 		lck.acquire(True)
 		msg[settings[0]] = settings[1]
 		lck.release()
-		conn.shutdown(socket.SHUT_RDWR)
+		if dbg:
+			print("Successfully received data.\n")
+		conn.shutdown(socket.SHUT_RD)
 		conn.close()
 	return 0

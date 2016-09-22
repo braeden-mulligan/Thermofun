@@ -4,7 +4,7 @@ import time, sys, signal, threading, socket, requests
 import RPi.GPIO as GPIO
 import subroutine
 
-if ('--debug' in sys.argv) or ('-d' in sys.argv):
+if ('--verbose' in sys.argv) or ('-v' in sys.argv):
 	DEBUG = True
 else:
 	DEBUG = False
@@ -19,7 +19,7 @@ temperature_lock = threading.Lock()
 
 # Socket config.
 HOST = 'localhost'
-PORT = 5003
+PORT = 5001
 
 # Web server.
 HOST_S = 'localhost'
@@ -60,8 +60,8 @@ def furnaceSafety(reason):
 		time.sleep(900.0) # Grab lock and hold to force cooldown period.
 	ACTIVE_LOCK.release()
 	if DEBUG:
-		subroutine.eventLog('* Safety switch triggered: ' + reason)
 		print("Safety event, check logs.")
+	subroutine.eventLog('* Safety switch triggered: ' + reason)
 	return 0
 
 # Globals for holding schedule data to make functions nicer.
@@ -160,8 +160,8 @@ def main():
 	threshold_low = temperature['target'] + 0.125
 	temperature_lock.release()
 	agenda = subroutine.getSchedules(DEBUG)
-	if DEBUG:
-		agenda.append((2002, 18))
+	#if DEBUG:
+	#	agenda.append((2002, 18))
 	nextTimer()
 
 # Start socket to listen for settings changes from web app.
@@ -212,15 +212,18 @@ def main():
 	# query for enable
 			continue
 
-		if DEBUG:
-			temp_re = requests.get('http://'+HOST_S+':'+str(PORT_S)+'/thermostat/target_change')
-			temperature['target'] = float(temp_re.text)
-			print("Target acquired: " + str(temperature['target']))
+	#	if DEBUG:
+		#	temp_re = requests.get('http://'+HOST_S+':'+str(PORT_S)+'/thermostat/target_change')
+		#	temperature['target'] = float(temp_re.text)
+		#	print("Target acquired: " + str(temperature['target']))
 	# Check for notification of changes to HVAC settings.
+	# TODO: Do this asyncrhonously; low priority.
 		target_change = None
 		message_lock.acquire(True)
 		if message: 
 			target_change = float(message['target'])
+			if DEBUG:
+				print("Target acquired: " + str(target_change) + u"\u00B0C")
 			del message['target']
 			agenda = subroutine.getSchedules(DEBUG)
 		# Recalculate next schedule
@@ -239,7 +242,7 @@ def main():
 			print("Verifying temperature reading...")
 	# Provide temporary-only power to thermometer to avoid heating it above ambient.
 		GPIO.output(27, 1)
-		time.sleep(1.000)
+		time.sleep(1.125)
 		temperature['current'] = subroutine.getTemperature(DEBUG)
 		GPIO.output(27, 0)
 		if temperature['current']:

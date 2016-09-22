@@ -13,6 +13,9 @@ def thermostat():
 	global temp_current
 	global temp_target
 
+#TODO: Currently unused
+	request_errors = []
+
 	profiles = models.Profile.query.all()
 	profile_active = []
 	for p in profiles:
@@ -30,8 +33,7 @@ def thermostat():
 
 # Choose profile.
 # TODO:
-	# socket notification
-	# change style of submissions
+	# re-do profile selections for usability; high priorty.
 	# data validation
 	if request.method == 'POST':
 		if 'profile_selection' in request.form:
@@ -59,10 +61,8 @@ def thermostat():
 				temp_target = profile_active[0].temperature
 
 # Modify profile's existing schedules.
-	if request.method == 'POST':
 # TODO:
 	# data validation
-	# socket notification
 		if 'schedule_modify' in request.form:
 			shedule_mod = models.Schedule.query.filter_by(id=request.form['schedule_modify']).delete()
 			db.session.commit()
@@ -80,6 +80,10 @@ def thermostat():
 					db.session.add(new_schedule)
 					db.session.commit()
 
+		error_result = subroutine.notifyHw(temp_target)
+		if error_result:
+			request_errors.append("Could not notify controller of update")
+			
 # Process content before shipping.
 # Bring active profile to top for display.
 # TODO:
@@ -90,9 +94,9 @@ def thermostat():
 		hr = s.time / 100
 		mi = s.time - (hr * 100)
 		s.time = "%02d"%hr + ":" + "%02d"%mi
-		s.temperature = "%0.2f"%s.temperature
+		s.temperature = "%0.1f"%s.temperature
 	for p in profiles:
-		p.temperature = "%0.2f"%p.temperature
+		p.temperature = "%0.1f"%p.temperature
 
 	content = {'title':"Thermostat"}
 	content['profiles'] = profiles
@@ -113,6 +117,7 @@ def target_change():
 	if request.method == 'POST':
 		if 'target_modify' in request.form:
 			temp_target = round(float(request.form['target_modify']), 1)
+			subroutine.notifyHw(temp_target)
 			return redirect(url_for('thermostat'))
 		if 'controller_data' in request.form:
 			temp_target = round(float(request.form['controller_data']), 1)
@@ -156,6 +161,9 @@ def profile_create():
 					db.session.add(init_schedule)
 					db.session.commit()
 			count += 1
+
+# Not exactly necessary here yet; just to avoid future bugs.
+		subroutine.notifyHw(temp_target)
 		
 		return redirect(url_for('thermostat'))
 # END def profile_create()
