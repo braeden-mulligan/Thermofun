@@ -72,15 +72,7 @@ def nextTimer():
 		s.cancel()
 		schedules.remove(s)
 	
-# Keep threads chaining off each other.
-# TODO: Probably won't cause unbounded thread creation? Test this hypothesis, delete block.
 	if not agenda:
-		"""
-		refresh = 24 * 3600
-		schedules.append(threading.Timer(refresh, changeTarget, kwargs={'target':None}))
-		schedules[-1].daemon = True
-		schedules[-1].start() 
-		"""
 		if DEBUG:
 			print("No schedules found.\n")
 	else:
